@@ -237,7 +237,7 @@ export const useStore = create((set, get) => ({
   },
 
   // ── Submit Answer ──────────────────────────────────────────────
-  submitAnswer: async (answer) => {
+  submitAnswer: (answer) => {
     const state = get()
     const { currentQuestions, currentQuestionIndex, studentId, currentGrade, currentTopic } = state
     const question = currentQuestions[currentQuestionIndex]
@@ -246,17 +246,9 @@ export const useStore = create((set, get) => ({
     const isCorrect = String(answer).trim().toLowerCase() ===
                       String(question.correct_answer).trim().toLowerCase()
 
-    // Record attempt — wrapped so a DB error never silently kills feedback
-    try {
-      await recordAttempt(studentId, question.id, currentGrade, currentTopic, isCorrect)
-    } catch (err) {
-      console.error('recordAttempt failed:', err)
-    }
-
-    // XP
+    // ── Update UI immediately so mobile doesn't freeze ──────────────
     if (isCorrect) {
       const xpGain = question.difficulty * 10
-      await updateProfileXP(studentId, xpGain)
       const updatedProfile = { ...state.profile, xp: (state.profile?.xp || 0) + xpGain }
       const newStreak = state.sessionStreak + 1
       const newProgress = Math.min(100, state.rocketProgress + (100 / currentQuestions.length))
@@ -271,51 +263,83 @@ export const useStore = create((set, get) => ({
         showCopilot: false,
       })
 
-      // Sound feedback
       if (newStreak >= 3) playStreak(newStreak)
       else playCorrect()
 
-      // Update daily activity + streak goal
-      await upsertDailyActivity(studentId, xpGain)
-      const newTodayXp = (state.todayXpEarned || 0) + xpGain
-      const wasGoalMet = state.goalMetToday
-      const isGoalNowMet = newTodayXp >= state.dailyXpGoal
-      if (isGoalNowMet && !wasGoalMet) {
-        await markGoalMet(studentId)
-        // Update streak now that we have activity today
-        const streakResult = await checkAndUpdateStreak(studentId)
-        set({
-          todayXpEarned: newTodayXp,
-          goalMetToday: true,
-          currentStreak: streakResult.currentStreak,
-          longestStreak: streakResult.longestStreak,
-        })
-      } else {
-        set({ todayXpEarned: newTodayXp })
-      }
-
-      // Badge checks
-      const badges = []
-      if (state.sessionCorrect === 0)    badges.push('FIRST_LAUNCH')
-      if (newStreak === 3)               badges.push('STREAK_3')
-      if (newStreak === 5)               badges.push('PERFECT_ORBIT')
-      if (newStreak === 10 && currentTopic === 'reasoning') badges.push('PATTERN_MASTER')
-      if (updatedProfile.xp >= 100)      badges.push('MATH_HERO')
-      if (updatedProfile.xp >= 500)      badges.push('STAR_CHAMPION')
-      const cs = get().currentStreak
-      if (cs >= 7)  badges.push('STREAK_7')
-      if (cs >= 30) badges.push('STREAK_30')
-      for (const badgeId of badges) {
-        const newly = await awardBadge(studentId, badgeId)
-        if (newly) {
-          playBadge()
-          const updatedBadges = await getStudentBadges(studentId)
-          set({ newBadge: BADGES[badgeId], earnedBadges: updatedBadges })
-          break
+      // ── DB writes in background — never block the UI ────────────
+      ;(async () => {
+        try {
+          await recordAttempt(studentId, question.id, currentGrade, currentTopic, isCorrect)
+        } catch (err) {
+          console.error('recordAttempt failed:', err)
         }
-      }
+
+        try {
+          await updateProfileXP(studentId, xpGain)
+        } catch (err) {
+          console.error('updateProfileXP failed:', err)
+        }
+
+        try {
+          await upsertDailyActivity(studentId, xpGain)
+          const newTodayXp = (state.todayXpEarned || 0) + xpGain
+          const wasGoalMet = state.goalMetToday
+          const isGoalNowMet = newTodayXp >= state.dailyXpGoal
+          if (isGoalNowMet && !wasGoalMet) {
+            await markGoalMet(studentId)
+            const streakResult = await checkAndUpdateStreak(studentId)
+            set({
+              todayXpEarned: newTodayXp,
+              goalMetToday: true,
+              currentStreak: streakResult.currentStreak,
+              longestStreak: streakResult.longestStreak,
+            })
+          } else {
+            set({ todayXpEarned: newTodayXp })
+          }
+        } catch (err) {
+          console.error('daily activity update failed:', err)
+        }
+
+        // Badge checks
+        try {
+          const newStreak = get().sessionStreak
+          const updatedXp = get().profile?.xp || 0
+          const badges = []
+          if (state.sessionCorrect === 0)    badges.push('FIRST_LAUNCH')
+          if (newStreak === 3)               badges.push('STREAK_3')
+          if (newStreak === 5)               badges.push('PERFECT_ORBIT')
+          if (newStreak === 10 && currentTopic === 'reasoning') badges.push('PATTERN_MASTER')
+          if (updatedXp >= 100)              badges.push('MATH_HERO')
+          if (updatedXp >= 500)              badges.push('STAR_CHAMPION')
+          const cs = get().currentStreak
+          if (cs >= 7)  badges.push('STREAK_7')
+          if (cs >= 30) badges.push('STREAK_30')
+          for (const badgeId of badges) {
+            const newly = await awardBadge(studentId, badgeId)
+            if (newly) {
+              playBadge()
+              const updatedBadges = await getStudentBadges(studentId)
+              set({ newBadge: BADGES[badgeId], earnedBadges: updatedBadges })
+              break
+            }
+          }
+        } catch (err) {
+          console.error('badge check failed:', err)
+        }
+
+        // Update mastery
+        try {
+          const key = `${currentGrade}-${currentTopic}`
+          const newMastery = await calculateTopicMastery(studentId, currentGrade, currentTopic)
+          await setMastery(studentId, currentGrade, currentTopic, newMastery)
+          set(s => ({ masteryMap: { ...s.masteryMap, [key]: newMastery } }))
+        } catch (err) {
+          console.error('mastery update failed:', err)
+        }
+      })()
     } else {
-      // Wrong: show copilot hint
+      // Wrong: show copilot hint immediately
       const hint = question.hint_logic?.default || "Double-check your work, Captain!"
       playWrong()
       set({
@@ -325,13 +349,24 @@ export const useStore = create((set, get) => ({
         showCopilot: true,
         copilotMessage: hint,
       })
-    }
 
-    // Update mastery
-    const key = `${currentGrade}-${currentTopic}`
-    const newMastery = await calculateTopicMastery(studentId, currentGrade, currentTopic)
-    await setMastery(studentId, currentGrade, currentTopic, newMastery)
-    set(s => ({ masteryMap: { ...s.masteryMap, [key]: newMastery } }))
+      // DB writes in background
+      ;(async () => {
+        try {
+          await recordAttempt(studentId, question.id, currentGrade, currentTopic, false)
+        } catch (err) {
+          console.error('recordAttempt failed:', err)
+        }
+        try {
+          const key = `${currentGrade}-${currentTopic}`
+          const newMastery = await calculateTopicMastery(studentId, currentGrade, currentTopic)
+          await setMastery(studentId, currentGrade, currentTopic, newMastery)
+          set(s => ({ masteryMap: { ...s.masteryMap, [key]: newMastery } }))
+        } catch (err) {
+          console.error('mastery update failed:', err)
+        }
+      })()
+    }
   },
 
   // ── Advance to next question ───────────────────────────────────

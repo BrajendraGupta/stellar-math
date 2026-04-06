@@ -9,8 +9,8 @@ import React from 'react'
  */
 export function renderShape(descriptor, size = 40) {
   if (!descriptor) return null
-  const { shape = 'circle', color = 'var(--comet-cyan)', rotation = 0, filled = true } = descriptor
-  const r = size / 2
+  const { shape = 'circle', color = 'var(--comet-cyan)', rotation = 0, filled = true, size: sizeScale = 1 } = descriptor
+  const r = (size * sizeScale) / 2
   const fill = filled ? color : 'none'
   const stroke = color
   const sw = filled ? 0 : 2.5
