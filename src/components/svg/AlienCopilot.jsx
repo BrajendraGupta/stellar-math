@@ -1,7 +1,15 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { speakText, stopSpeaking } from '../../audio/SoundManager.js'
 
 export default function AlienCopilot({ message = '', visible = false, onDismiss }) {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
   // Read the hint aloud when copilot appears
   useEffect(() => {
     if (visible && message) {
@@ -12,6 +20,68 @@ export default function AlienCopilot({ message = '', visible = false, onDismiss 
 
   if (!visible) return null
 
+  // ── Mobile: full-width banner at bottom ──────────────────────────
+  if (isMobile) {
+    return (
+      <div style={{
+        position: 'fixed', bottom: 64, left: 8, right: 8, zIndex: 100,
+        background: 'rgba(13, 21, 69, 0.97)',
+        border: '2px solid var(--comet-cyan)',
+        borderRadius: 16,
+        padding: '12px 14px 12px 56px',
+        boxShadow: '0 0 24px rgba(0,229,255,0.35)',
+        animation: 'slide-up 0.3s ease forwards',
+        display: 'flex', alignItems: 'center',
+      }}>
+        {/* Alien avatar — small, left side */}
+        <svg width="44" height="54" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg"
+          style={{ position: 'absolute', left: 6, bottom: 0, animation: 'float 2s ease-in-out infinite' }}>
+          <ellipse cx="40" cy="65" rx="22" ry="18" fill="url(#alien-body-m)" />
+          <ellipse cx="40" cy="38" rx="26" ry="28" fill="url(#alien-head-m)" />
+          <ellipse cx="28" cy="32" rx="9" ry="11" fill="white" />
+          <ellipse cx="52" cy="32" rx="9" ry="11" fill="white" />
+          <circle cx="29" cy="33" r="6" fill="#1565c0" />
+          <circle cx="53" cy="33" r="6" fill="#1565c0" />
+          <circle cx="30" cy="31" r="3" fill="black" />
+          <circle cx="54" cy="31" r="3" fill="black" />
+          <circle cx="31" cy="29" r="1.5" fill="white" />
+          <circle cx="55" cy="29" r="1.5" fill="white" />
+          <path d="M29 50 Q40 58 51 50" fill="none" stroke="#00e5ff" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="28" y1="12" x2="20" y2="2" stroke="#00e676" strokeWidth="2" />
+          <circle cx="20" cy="2" r="3" fill="#00e676" />
+          <line x1="52" y1="12" x2="60" y2="2" stroke="#00e676" strokeWidth="2" />
+          <circle cx="60" cy="2" r="3" fill="#00e676" />
+          <defs>
+            <radialGradient id="alien-head-m" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#a5d6a7" />
+              <stop offset="100%" stopColor="#2e7d32" />
+            </radialGradient>
+            <radialGradient id="alien-body-m" cx="50%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#81c784" />
+              <stop offset="100%" stopColor="#1b5e20" />
+            </radialGradient>
+          </defs>
+        </svg>
+
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '0.7rem', color: 'var(--comet-cyan)', fontWeight: 700, marginBottom: 2 }}>
+            Co-Pilot ARIA
+          </div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.4, margin: 0 }}>
+            {message}
+          </p>
+        </div>
+
+        <button onClick={onDismiss} style={{
+          background: 'none', border: 'none', color: 'var(--text-muted)',
+          cursor: 'pointer', fontSize: '1.1rem', padding: '4px 4px 4px 12px',
+          lineHeight: 1, flexShrink: 0, minWidth: 32, minHeight: 32,
+        }}>✕</button>
+      </div>
+    )
+  }
+
+  // ── Desktop: speech bubble + alien in bottom-right corner ────────
   return (
     <div style={{
       position: 'fixed', bottom: 24, right: 24, zIndex: 100,
@@ -42,27 +112,19 @@ export default function AlienCopilot({ message = '', visible = false, onDismiss 
           borderBottom: '8px solid transparent',
           borderLeft: '10px solid var(--comet-cyan)',
         }} />
-        <button
-          onClick={onDismiss}
-          style={{
-            position: 'absolute', top: 6, right: 8,
-            background: 'none', border: 'none',
-            color: 'var(--text-muted)', cursor: 'pointer',
-            fontSize: '1rem', lineHeight: 1,
-          }}
-        >✕</button>
+        <button onClick={onDismiss} style={{
+          position: 'absolute', top: 6, right: 8,
+          background: 'none', border: 'none',
+          color: 'var(--text-muted)', cursor: 'pointer',
+          fontSize: '1rem', lineHeight: 1,
+        }}>✕</button>
       </div>
 
       {/* Alien character */}
       <svg width="80" height="100" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg"
         style={{ animation: 'float 2s ease-in-out infinite', flexShrink: 0 }}>
-        {/* Body */}
         <ellipse cx="40" cy="65" rx="22" ry="18" fill="url(#alien-body)" />
-
-        {/* Head */}
         <ellipse cx="40" cy="38" rx="26" ry="28" fill="url(#alien-head)" />
-
-        {/* Eyes — big, friendly */}
         <ellipse cx="28" cy="32" rx="9" ry="11" fill="white" />
         <ellipse cx="52" cy="32" rx="9" ry="11" fill="white" />
         <circle cx="29" cy="33" r="6" fill="#1565c0" />
@@ -71,28 +133,17 @@ export default function AlienCopilot({ message = '', visible = false, onDismiss 
         <circle cx="54" cy="31" r="3" fill="black" />
         <circle cx="31" cy="29" r="1.5" fill="white" />
         <circle cx="55" cy="29" r="1.5" fill="white" />
-
-        {/* Smile */}
         <path d="M29 50 Q40 58 51 50" fill="none" stroke="#00e5ff" strokeWidth="2.5" strokeLinecap="round" />
-
-        {/* Antennae */}
         <line x1="28" y1="12" x2="20" y2="2" stroke="#00e676" strokeWidth="2" />
         <circle cx="20" cy="2" r="3" fill="#00e676" />
         <line x1="52" y1="12" x2="60" y2="2" stroke="#00e676" strokeWidth="2" />
         <circle cx="60" cy="2" r="3" fill="#00e676" />
-
-        {/* Arms */}
         <ellipse cx="14" cy="62" rx="6" ry="10" fill="url(#alien-body)" transform="rotate(-20 14 62)" />
         <ellipse cx="66" cy="62" rx="6" ry="10" fill="url(#alien-body)" transform="rotate(20 66 62)" />
-
-        {/* Helmet ring */}
         <ellipse cx="40" cy="55" rx="26" ry="5" fill="none"
           stroke="rgba(0,229,255,0.5)" strokeWidth="2" strokeDasharray="4 3" />
-
-        {/* Spacesuit details */}
         <circle cx="40" cy="65" r="5" fill="rgba(0,229,255,0.4)" />
         <line x1="35" y1="70" x2="45" y2="70" stroke="rgba(0,229,255,0.4)" strokeWidth="1.5" />
-
         <defs>
           <radialGradient id="alien-head" cx="40%" cy="35%" r="60%">
             <stop offset="0%" stopColor="#a5d6a7" />

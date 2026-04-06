@@ -5,12 +5,24 @@ import { getNebulaQuestions } from '../data/questions/index.js'
 import { speakText, stopSpeaking, isSpeaking } from '../audio/SoundManager.js'
 import RocketShip from '../components/svg/RocketShip.jsx'
 import AlienCopilot from '../components/svg/AlienCopilot.jsx'
-import StarCubes from '../components/manipulatives/StarCubes.jsx'
 import FractionPie from '../components/visuals/FractionPie.jsx'
 import ArrayDots from '../components/visuals/ArrayDots.jsx'
 import PatternSequence from '../components/visuals/PatternSequence.jsx'
 import NumberLine from '../components/manipulatives/NumberLine.jsx'
 import FractionBar from '../components/manipulatives/FractionBar.jsx'
+import NumberBonds from '../components/visuals/NumberBonds.jsx'
+import ClockFace from '../components/visuals/ClockFace.jsx'
+import CoinsDisplay from '../components/visuals/CoinsDisplay.jsx'
+import CoordinatePlane from '../components/visuals/CoordinatePlane.jsx'
+import BarModel from '../components/visuals/BarModel.jsx'
+import PatternMatrix from '../components/visuals/PatternMatrix.jsx'
+import RotationQuestion from '../components/visuals/RotationQuestion.jsx'
+import ReflectionQuestion from '../components/visuals/ReflectionQuestion.jsx'
+import OddOneOut from '../components/visuals/OddOneOut.jsx'
+import ShapeNet from '../components/visuals/ShapeNet.jsx'
+import VisualAnalogy from '../components/visuals/VisualAnalogy.jsx'
+import SymmetryComplete from '../components/visuals/SymmetryComplete.jsx'
+import VisualOptionGrid from '../components/ui/VisualOptionGrid.jsx'
 
 function ChoiceButton({ label, onClick, disabled, state }) {
   const bg =
@@ -74,6 +86,13 @@ export default function LevelScreen() {
   const [numericInput, setNumericInput] = useState('')
   const [selectedOption, setSelectedOption] = useState(null)
   const [speaking, setSpeaking] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 700)
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 700)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   const question = currentQuestions[currentQuestionIndex]
 
@@ -117,7 +136,8 @@ export default function LevelScreen() {
 
   if (!question) return null
 
-  const isMultipleChoice = question.type === 'mc'
+  const isMultipleChoice = question.type === 'mc' || question.type === 'visual-reasoning'
+  const isVisualReasoning = question.type === 'visual-reasoning'
   const optionLabels = ['A', 'B', 'C', 'D']
   const correctOptionIdx = question.options
     ? question.options.findIndex(
@@ -151,10 +171,11 @@ export default function LevelScreen() {
       {/* Top bar */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 24px',
+        padding: isMobile ? '10px 14px' : '16px 24px',
         background: 'rgba(0,0,0,0.2)',
         borderBottom: '1px solid var(--glass-border)',
-        gap: 16,
+        gap: isMobile ? 8 : 16,
+        flexShrink: 0,
       }}>
         <button className="btn btn-ghost" onClick={() => navigate('planet', currentGrade, currentTopic)}
           style={{ padding: '6px 14px', fontSize: '0.85rem' }}>✕ Exit</button>
@@ -175,17 +196,17 @@ export default function LevelScreen() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--planet-green)', fontWeight: 700 }}>✓ {sessionCorrect}</span>
-          <span style={{ fontSize: '0.85rem', color: 'var(--danger-red)', fontWeight: 700 }}>✕ {sessionTotal - sessionCorrect}</span>
-          <div className="xp-chip" style={{ fontSize: '0.75rem' }}>⭐ {profile?.xp || 0}</div>
+        <div style={{ display: 'flex', gap: isMobile ? 8 : 12, alignItems: 'center', flexShrink: 0 }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--planet-green)', fontWeight: 700 }}>✓{sessionCorrect}</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--danger-red)', fontWeight: 700 }}>✕{sessionTotal - sessionCorrect}</span>
+          {!isMobile && <div className="xp-chip" style={{ fontSize: '0.75rem' }}>⭐ {profile?.xp || 0}</div>}
         </div>
       </div>
 
       {/* Rocket progress track */}
       <div style={{
-        margin: '12px 24px 0',
-        height: 64,
+        margin: isMobile ? '8px 14px 0' : '12px 24px 0',
+        height: isMobile ? 48 : 64,
         background: 'rgba(0,0,0,0.2)',
         borderRadius: 16,
         position: 'relative',
@@ -228,11 +249,16 @@ export default function LevelScreen() {
 
       {/* Main question area */}
       <div style={{
-        flex: 1, display: 'flex', gap: 24, padding: '20px 24px',
-        alignItems: 'flex-start', overflow: 'auto',
+        flex: 1,
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? 12 : 24,
+        padding: isMobile ? '12px 14px' : '20px 24px',
+        alignItems: 'flex-start',
+        overflow: 'auto',
       }}>
         {/* Question panel */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 16, minWidth: 0, width: '100%' }}>
           {/* Difficulty badge */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)',
@@ -246,9 +272,11 @@ export default function LevelScreen() {
           </div>
 
           {/* Question text */}
-          <div className="glass-card" style={{ padding: '24px 28px', position: 'relative' }}>
+          <div className="glass-card" style={{ padding: isMobile ? '16px 18px' : '24px 28px', position: 'relative' }}>
             <p style={{
-              fontSize: question.display_mode === 'equation' ? '1.8rem' : '1.1rem',
+              fontSize: question.display_mode === 'equation'
+                ? (isMobile ? '1.4rem' : '1.8rem')
+                : (isMobile ? '1rem' : '1.1rem'),
               fontWeight: question.display_mode === 'equation' ? 800 : 600,
               lineHeight: 1.6,
               color: 'var(--text-primary)',
@@ -312,6 +340,52 @@ export default function LevelScreen() {
               {question.visual_type === 'pattern' && question.visual_config && (
                 <PatternSequence {...question.visual_config} />
               )}
+              {question.visual_type === 'number-bonds' && question.visual_config && (
+                <NumberBonds {...question.visual_config} />
+              )}
+              {question.visual_type === 'clock-face' && question.visual_config && (
+                <ClockFace {...question.visual_config} />
+              )}
+              {question.visual_type === 'coins' && question.visual_config && (
+                <CoinsDisplay {...question.visual_config} />
+              )}
+              {question.visual_type === 'coordinate-plane' && question.visual_config && (
+                <CoordinatePlane {...question.visual_config} />
+              )}
+              {question.visual_type === 'bar-model' && question.visual_config && (
+                <BarModel {...question.visual_config} />
+              )}
+              {question.visual_type === 'pattern-matrix' && question.visual_config && (
+                <PatternMatrix {...question.visual_config} />
+              )}
+              {question.visual_type === 'rotation' && question.visual_config && (
+                <RotationQuestion {...question.visual_config} />
+              )}
+              {question.visual_type === 'reflection' && question.visual_config && (
+                <ReflectionQuestion {...question.visual_config} />
+              )}
+              {question.visual_type === 'odd-one-out' && question.visual_config && (
+                <OddOneOut
+                  items={question.visual_config.items}
+                  selected={selectedOption}
+                  correct={feedbackState ? question.visual_config.oddIndex : null}
+                  feedbackState={feedbackState}
+                  onSelect={idx => {
+                    if (feedbackState) return
+                    setSelectedOption(idx)
+                    submitAnswer(String(idx))
+                  }}
+                />
+              )}
+              {question.visual_type === 'shape-net' && question.visual_config && (
+                <ShapeNet {...question.visual_config} />
+              )}
+              {question.visual_type === 'visual-analogy' && question.visual_config && (
+                <VisualAnalogy {...question.visual_config} />
+              )}
+              {question.visual_type === 'symmetry-complete' && question.visual_config && (
+                <SymmetryComplete {...question.visual_config} />
+              )}
             </div>
           )}
 
@@ -332,7 +406,20 @@ export default function LevelScreen() {
           )}
 
           {/* Answer input */}
-          {isMultipleChoice ? (
+          {isVisualReasoning && question.visual_options ? (
+            <VisualOptionGrid
+              options={question.visual_options}
+              selected={selectedOption !== null ? optionLabels[selectedOption] : null}
+              feedbackState={feedbackState}
+              correctKey={String(question.correct_answer).toUpperCase()}
+              onSelect={key => {
+                if (feedbackState) return
+                const idx = optionLabels.indexOf(key)
+                setSelectedOption(idx)
+                submitAnswer(key)
+              }}
+            />
+          ) : isMultipleChoice ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {question.options.map((opt, i) => {
                 const isSelected = selectedOption === i
@@ -357,11 +444,16 @@ export default function LevelScreen() {
           ) : (
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
                 value={numericInput}
                 onChange={e => setNumericInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleNumericSubmit()}
-                placeholder="Enter your answer..."
+                placeholder="Your answer..."
                 disabled={!!feedbackState}
                 style={{
                   flex: 1, padding: '14px 18px',
@@ -372,15 +464,16 @@ export default function LevelScreen() {
                     ? '2px solid var(--danger-red)'
                     : '2px solid var(--glass-border)',
                   borderRadius: 12, color: 'white',
-                  fontSize: '1.3rem', textAlign: 'center',
+                  fontSize: isMobile ? '1.1rem' : '1.3rem', textAlign: 'center',
                   outline: 'none',
+                  minHeight: 52,
                 }}
               />
               <button
                 className="btn btn-primary"
                 onClick={handleNumericSubmit}
                 disabled={!!feedbackState || !numericInput.trim()}
-                style={{ opacity: (feedbackState || !numericInput.trim()) ? 0.5 : 1 }}
+                style={{ opacity: (feedbackState || !numericInput.trim()) ? 0.5 : 1, flexShrink: 0 }}
               >
                 Check 🚀
               </button>
@@ -395,37 +488,14 @@ export default function LevelScreen() {
           )}
         </div>
 
-        {/* Manipulative panel — shown when question has a manipulative config */}
-        {question.manipulative && question.manipulative_config && (
+        {/* Manipulative panel — number-line and fraction-bar only (star-cubes removed) */}
+        {question.manipulative && question.manipulative !== 'star-cubes' && question.manipulative_config && (
           <div className="glass-card" style={{
-            padding: '16px 20px', width: 320, flexShrink: 0,
+            padding: '16px 20px',
+            width: isMobile ? '100%' : 320,
+            flexShrink: 0,
             display: 'flex', flexDirection: 'column', gap: 10,
           }}>
-            {question.manipulative === 'star-cubes' && (
-              <>
-                <div style={{ fontSize: '0.75rem', color: 'var(--comet-cyan)', fontWeight: 700,
-                  textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  ⭐ Star-Cube Helper
-                </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>
-                  {question.manipulative_config.groups} groups of {question.manipulative_config.perGroup} stars
-                  &nbsp;= <strong style={{ color: 'var(--star-yellow)' }}>
-                    {question.manipulative_config.groups * question.manipulative_config.perGroup} total
-                  </strong>
-                </div>
-                <div style={{ overflowX: 'auto', paddingBottom: 28 }}>
-                  <StarCubes
-                    key={question.id}
-                    groups={question.manipulative_config.groups}
-                    perGroup={question.manipulative_config.perGroup}
-                    interactive={true}
-                  />
-                </div>
-                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.5, marginTop: 4 }}>
-                  Drag the stars to help count equal groups!
-                </p>
-              </>
-            )}
             {question.manipulative === 'number-line' && (
               <>
                 <div style={{ fontSize: '0.75rem', color: 'var(--comet-cyan)', fontWeight: 700,

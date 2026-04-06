@@ -3,39 +3,55 @@ import { grade2Questions } from './grade2.js'
 import { grade3Questions, grade3NebulaQuestions } from './grade3.js'
 import { grade4Questions } from './grade4.js'
 import { grade5Questions } from './grade5.js'
+import { reasoningK2Questions } from './reasoning-k2.js'
+import { reasoning35Questions } from './reasoning-35.js'
+import { reasoning68Questions } from './reasoning-68.js'
+import { reasoning910Questions } from './reasoning-910.js'
 
 // Question registry — add grades as you expand content
+const reasoningByGrade = (questions, grade) => questions.filter(q => q.grade === grade)
+
 const QUESTION_BANK = {
   1: {
     counting:    grade1Questions.filter(q => q.topic === 'counting'),
     addition:    grade1Questions.filter(q => q.topic === 'addition'),
     subtraction: grade1Questions.filter(q => q.topic === 'subtraction'),
     shapes:      grade1Questions.filter(q => q.topic === 'shapes'),
+    reasoning:   reasoningByGrade(reasoningK2Questions, 1),
   },
   2: {
-    addition:    grade2Questions.filter(q => q.topic === 'addition'),
-    subtraction: grade2Questions.filter(q => q.topic === 'subtraction'),
+    addition:      grade2Questions.filter(q => q.topic === 'addition'),
+    subtraction:   grade2Questions.filter(q => q.topic === 'subtraction'),
     'place-value': grade2Questions.filter(q => q.topic === 'place-value'),
-    measurement: grade2Questions.filter(q => q.topic === 'measurement'),
+    measurement:   grade2Questions.filter(q => q.topic === 'measurement'),
+    reasoning:     reasoningByGrade(reasoningK2Questions, 2),
   },
   3: {
     multiplication: grade3Questions.filter(q => q.topic === 'multiplication'),
     division:       grade3Questions.filter(q => q.topic === 'division'),
     fractions:      grade3Questions.filter(q => q.topic === 'fractions'),
     time:           grade3Questions.filter(q => q.topic === 'time'),
+    reasoning:      reasoningByGrade(reasoning35Questions, 3),
   },
   4: {
     multiplication: grade4Questions.filter(q => q.topic === 'multiplication'),
     division:       grade4Questions.filter(q => q.topic === 'division'),
     fractions:      grade4Questions.filter(q => q.topic === 'fractions'),
     decimals:       grade4Questions.filter(q => q.topic === 'decimals'),
+    reasoning:      reasoningByGrade(reasoning35Questions, 4),
   },
   5: {
-    fractions:      grade5Questions.filter(q => q.topic === 'fractions'),
-    decimals:       grade5Questions.filter(q => q.topic === 'decimals'),
-    geometry:       grade5Questions.filter(q => q.topic === 'geometry'),
-    data:           grade5Questions.filter(q => q.topic === 'data'),
+    fractions:  grade5Questions.filter(q => q.topic === 'fractions'),
+    decimals:   grade5Questions.filter(q => q.topic === 'decimals'),
+    geometry:   grade5Questions.filter(q => q.topic === 'geometry'),
+    data:       grade5Questions.filter(q => q.topic === 'data'),
+    reasoning:  reasoningByGrade(reasoning35Questions, 5),
   },
+  6: { reasoning: reasoningByGrade(reasoning68Questions, 6) },
+  7: { reasoning: reasoningByGrade(reasoning68Questions, 7) },
+  8: { reasoning: reasoningByGrade(reasoning68Questions, 8) },
+  9: { reasoning: reasoningByGrade(reasoning910Questions, 9) },
+  10: { reasoning: reasoningByGrade(reasoning910Questions, 10) },
 }
 
 const NEBULA_BANK = {

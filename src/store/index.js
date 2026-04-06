@@ -3,7 +3,9 @@ import {
   getAllProfiles, createProfile, deleteProfile, getProfileById, updateProfileXP,
   getMastery, setMastery, recordAttempt, awardBadge, getStudentBadges,
   saveFlightLog, loadFlightLog, isStruggleZone, getFullProfile,
-  calculateTopicMastery
+  calculateTopicMastery,
+  checkAndUpdateStreak, getStreakState, getTodayActivity, upsertDailyActivity, markGoalMet,
+  verifyPortalPin, hasPortalPin,
 } from '../db/index.js'
 import { playCorrect, playWrong, playBadge, playLevelComplete, playLevelFailed, playStreak } from '../audio/SoundManager.js'
 
@@ -21,6 +23,10 @@ export const BADGES = {
   SPEED_RACER:      { id: 'SPEED_RACER',      name: 'Speed Racer',      icon: '🏎️', desc: 'Finished a level in record time! Your brain is faster than a warp drive.' },
   PERSISTENCE_PAID_OFF: { id: 'PERSISTENCE_PAID_OFF', name: 'Persistence', icon: '🔋', desc: 'Completed a level after initial struggle. Your grit is your greatest engine.' },
   STAR_CHAMPION:    { id: 'STAR_CHAMPION',    name: 'Star Champion',    icon: '🏆', desc: 'Earned 500 XP total! You are a true champion of the cosmos.' },
+  STREAK_7:         { id: 'STREAK_7',         name: '7-Day Streak',     icon: '🔥', desc: '7 days in a row! Your consistency is as reliable as a pulsar.' },
+  STREAK_30:        { id: 'STREAK_30',        name: '30-Day Streak',    icon: '🌟', desc: '30 days in a row! You are a legend of the cosmos.' },
+  MINDS_EYE:        { id: 'MINDS_EYE',        name: "Mind's Eye",       icon: '🧠', desc: 'Mastered the Mind Maze at 80%+! Your spatial reasoning is out of this world.' },
+  PATTERN_MASTER:   { id: 'PATTERN_MASTER',   name: 'Pattern Master',   icon: '🔷', desc: '10 reasoning questions correct in a row! You see patterns no one else can.' },
 }
 
 const initialState = {
@@ -54,9 +60,19 @@ const initialState = {
   earnedBadges: [],
   struggleTopics: [],
 
+  // Streak & daily goals
+  currentStreak: 0,
+  longestStreak: 0,
+  todayXpEarned: 0,
+  dailyXpGoal: 50,
+  goalMetToday: false,
+
+  // Portal
+  portalAuthenticated: false,
+
   // UI state
   isLoading: true,
-  needsNameEntry: false, 
+  needsNameEntry: false,
   feedbackState: null,   // null | 'correct' | 'wrong'
   testMode: false,       // if true, bypasses all locks/prerequisites
   isInitialized: false,
@@ -134,6 +150,13 @@ export const useStore = create((set, get) => ({
       masteryRecords.forEach(r => { masteryMap[`${r.grade}-${r.topic}`] = r.mastery })
       const flightLog = await loadFlightLog(id)
 
+      // Load streak + daily activity
+      const streakData = await checkAndUpdateStreak(id)
+      const todayActivity = await getTodayActivity(id)
+      const streakState = await getStreakState(id)
+      const dailyXpGoal = streakState?.dailyXpGoal || 50
+      const todayXpEarned = todayActivity?.xpEarned || 0
+
       set({
         studentId: id,
         profile,
@@ -143,6 +166,12 @@ export const useStore = create((set, get) => ({
         struggleTopics: struggles,
         currentMode: 'dashboard',
         isLoading: false,
+        currentStreak: streakData.currentStreak,
+        longestStreak: streakData.longestStreak,
+        todayXpEarned,
+        dailyXpGoal,
+        goalMetToday: todayXpEarned >= dailyXpGoal,
+        portalAuthenticated: false,
       })
       console.log('Profile selected successfully')
     } catch (err) {
@@ -160,8 +189,25 @@ export const useStore = create((set, get) => ({
       masteryMap: {},
       earnedBadges: [],
       struggleTopics: [],
+      portalAuthenticated: false,
+      currentStreak: 0,
+      longestStreak: 0,
+      todayXpEarned: 0,
+      goalMetToday: false,
     })
   },
+
+  // ── Portal ──────────────────────────────────────────────────────
+  enterPortal: async (profileId, pin) => {
+    const ok = await verifyPortalPin(profileId, pin)
+    if (ok) {
+      set({ portalAuthenticated: true, currentMode: 'portal' })
+      return true
+    }
+    return false
+  },
+
+  exitPortal: () => set({ portalAuthenticated: false, currentMode: 'dashboard' }),
 
   // ── Navigation ─────────────────────────────────────────────────
   setMode: (currentMode) => set({ currentMode }),
@@ -229,13 +275,36 @@ export const useStore = create((set, get) => ({
       if (newStreak >= 3) playStreak(newStreak)
       else playCorrect()
 
+      // Update daily activity + streak goal
+      await upsertDailyActivity(studentId, xpGain)
+      const newTodayXp = (state.todayXpEarned || 0) + xpGain
+      const wasGoalMet = state.goalMetToday
+      const isGoalNowMet = newTodayXp >= state.dailyXpGoal
+      if (isGoalNowMet && !wasGoalMet) {
+        await markGoalMet(studentId)
+        // Update streak now that we have activity today
+        const streakResult = await checkAndUpdateStreak(studentId)
+        set({
+          todayXpEarned: newTodayXp,
+          goalMetToday: true,
+          currentStreak: streakResult.currentStreak,
+          longestStreak: streakResult.longestStreak,
+        })
+      } else {
+        set({ todayXpEarned: newTodayXp })
+      }
+
       // Badge checks
       const badges = []
-      if (state.sessionCorrect === 0) badges.push('FIRST_LAUNCH')
-      if (newStreak === 3)            badges.push('STREAK_3')
-      if (newStreak === 5)            badges.push('PERFECT_ORBIT')
-      if (updatedProfile.xp >= 100)   badges.push('MATH_HERO')
-      if (updatedProfile.xp >= 500)   badges.push('STAR_CHAMPION')
+      if (state.sessionCorrect === 0)    badges.push('FIRST_LAUNCH')
+      if (newStreak === 3)               badges.push('STREAK_3')
+      if (newStreak === 5)               badges.push('PERFECT_ORBIT')
+      if (newStreak === 10 && currentTopic === 'reasoning') badges.push('PATTERN_MASTER')
+      if (updatedProfile.xp >= 100)      badges.push('MATH_HERO')
+      if (updatedProfile.xp >= 500)      badges.push('STAR_CHAMPION')
+      const cs = get().currentStreak
+      if (cs >= 7)  badges.push('STREAK_7')
+      if (cs >= 30) badges.push('STREAK_30')
       for (const badgeId of badges) {
         const newly = await awardBadge(studentId, badgeId)
         if (newly) {
@@ -308,11 +377,16 @@ export const useStore = create((set, get) => ({
       const { getAvailableTopics } = await import('../data/questions/index.js')
       const topics = getAvailableTopics(currentGrade)
       const allMastered = topics.every(t => {
-        if (t === currentTopic) return pct >= 80 // use current pct as it's not yet in masteryMap
+        if (t === currentTopic) return pct >= 80
         return get().getMasteryForTopic(currentGrade, t) >= 80
       })
       if (allMastered && topics.length > 0) {
         badgesToAward.push('GALAXY_CONQUEROR')
+      }
+
+      // Mind's Eye: mastered reasoning topic at 80%+
+      if (currentTopic === 'reasoning' && pct >= 80) {
+        badgesToAward.push('MINDS_EYE')
       }
 
       for (const bId of badgesToAward) {

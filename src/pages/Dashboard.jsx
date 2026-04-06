@@ -2,11 +2,16 @@ import React, { useState } from 'react'
 import { useStore } from '../store/index.js'
 import { GRADE_GALAXIES, TOPICS, GRADE_UNLOCK_THRESHOLD } from '../data/schema.js'
 import { getAvailableTopics } from '../data/questions/index.js'
+import StreakBadge from '../components/ui/StreakBadge.jsx'
 
 export default function Dashboard() {
   // All hooks must be called unconditionally — before any early returns
   const { profile, navigate, logout, isLoading, getMasteryForTopic, testMode, toggleTestMode } = useStore()
   const grade = useStore(s => s.currentGrade) || 3
+  const currentStreak  = useStore(s => s.currentStreak)
+  const todayXpEarned  = useStore(s => s.todayXpEarned)
+  const dailyXpGoal    = useStore(s => s.dailyXpGoal)
+  const goalMetToday   = useStore(s => s.goalMetToday)
 
   const galaxy = GRADE_GALAXIES[grade] || GRADE_GALAXIES[3]
 
@@ -24,7 +29,7 @@ export default function Dashboard() {
   const xp = profile?.xp || 0
 
   return (
-    <div className="fill flex-col" style={{ position: 'relative', zIndex: 1, overflow: 'auto', padding: '24px 32px' }}>
+    <div className="fill flex-col mobile-pad" style={{ position: 'relative', zIndex: 1, overflow: 'auto', padding: '24px 32px' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -61,6 +66,37 @@ export default function Dashboard() {
             {testMode ? '🛡️ TEST MODE ON' : '🚀 TEST MODE OFF'}
           </button>
           <div className="xp-chip">⭐ {xp} XP</div>
+        </div>
+      </div>
+
+      {/* Streak & daily goal */}
+      <div className="glass-card" style={{
+        padding: '16px 24px', marginBottom: 20,
+        display: 'flex', alignItems: 'center', gap: 24,
+      }}>
+        <StreakBadge
+          streak={currentStreak}
+          goalPct={dailyXpGoal > 0 ? Math.min(100, (todayXpEarned / dailyXpGoal) * 100) : 0}
+          size="md"
+        />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700,
+            textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>
+            Daily Goal
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 8, height: 8, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', borderRadius: 8,
+              width: `${Math.min(100, dailyXpGoal > 0 ? (todayXpEarned / dailyXpGoal) * 100 : 0)}%`,
+              background: goalMetToday
+                ? 'linear-gradient(90deg, var(--planet-green), #00c853)'
+                : 'linear-gradient(90deg, var(--star-yellow), #ff9800)',
+              transition: 'width 0.6s ease',
+            }} />
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+            {todayXpEarned} / {dailyXpGoal} XP today
+          </div>
         </div>
       </div>
 

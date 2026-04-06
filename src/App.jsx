@@ -6,6 +6,8 @@ import PlanetScreen from './pages/PlanetScreen.jsx'
 import LevelScreen from './pages/LevelScreen.jsx'
 import ProfileScreen from './pages/ProfileScreen.jsx'
 import ProfilePicker from './pages/ProfilePicker.jsx'
+import PortalLockScreen from './pages/PortalLockScreen.jsx'
+import ParentPortal from './pages/ParentPortal.jsx'
 import AlienCopilot from './components/svg/AlienCopilot.jsx'
 import BadgePopup from './components/feedback/BadgePopup.jsx'
 
@@ -14,13 +16,14 @@ function BottomNav() {
   const { currentMode, navigate, profile } = useStore()
   if (!profile) return null
 
-  // Hide nav during active gameplay
-  if (['level', 'nebula', 'levelComplete', 'levelFailed', 'nebulaUnlocked'].includes(currentMode)) return null
+  // Hide nav during active gameplay and portal flow
+  if (['level', 'nebula', 'levelComplete', 'levelFailed', 'nebulaUnlocked', 'portalLock'].includes(currentMode)) return null
 
   const items = [
     { icon: '🏠', label: 'Home',    mode: 'dashboard' },
     { icon: '🌌', label: 'Galaxy',  mode: 'galaxy' },
     { icon: '👨‍🚀', label: 'Profile', mode: 'profile' },
+    { icon: '🎓', label: 'Portal',  mode: 'portalLock' },
   ]
 
   return (
@@ -86,7 +89,8 @@ export default function App() {
       case 'levelComplete':
       case 'levelFailed':
       case 'nebulaUnlocked': return <LevelScreen />
-      case 'profile':        return <ProfileScreen />
+      case 'portalLock':     return <PortalLockScreen />
+      case 'portal':         return <ParentPortal />
       default:               return <Dashboard />
     }
   }
@@ -100,7 +104,7 @@ export default function App() {
       <div style={{
         position: 'relative', zIndex: 1,
         width: '100%',
-        height: profile && !['level','nebula','levelComplete','levelFailed','nebulaUnlocked'].includes(currentMode)
+        height: profile && !['level','nebula','levelComplete','levelFailed','nebulaUnlocked','portalLock'].includes(currentMode)
           ? 'calc(100% - 64px)' : '100%',
         overflow: 'hidden',
       }}>

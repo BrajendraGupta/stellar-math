@@ -25,7 +25,7 @@ export default function GalaxyMap() {
   const allTopics = TOPICS[currentGrade] || []
 
   return (
-    <div className="fill flex-col" style={{ position: 'relative', zIndex: 1, overflow: 'auto', padding: '24px 32px' }}>
+    <div className="fill flex-col mobile-pad" style={{ position: 'relative', zIndex: 1, overflow: 'auto', padding: '24px 32px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
         <button className="btn btn-ghost" onClick={() => navigate('dashboard')} style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
@@ -49,22 +49,6 @@ export default function GalaxyMap() {
         justifyContent: 'center',
         padding: '20px 0 60px',
       }}>
-        {/* Connecting orbit lines */}
-        <svg style={{ position: 'absolute', inset: 0, pointerEvents: 'none', width: '100%', height: '100%', zIndex: 0 }}>
-          <defs>
-            <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 Z" fill="rgba(0,229,255,0.4)" />
-            </marker>
-          </defs>
-          <path
-            d="M 10%,50% Q 50%,10% 90%,50%"
-            fill="none"
-            stroke="rgba(0,229,255,0.12)"
-            strokeWidth="2"
-            strokeDasharray="6 4"
-          />
-        </svg>
-
         {allTopics.map((topic, i) => {
           const display = TOPIC_DISPLAY[topic] || { name: topic, color: '#9e9e9e', planet: topic }
           const mastery = getMasteryForTopic(currentGrade, topic)

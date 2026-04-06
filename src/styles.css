@@ -23,11 +23,24 @@
   --transition:    all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html, body, #root {
-  width: 100%; height: 100%;
+html {
+  /* Fix mobile Chrome 100vh bug (address bar shrinks visible area) */
+  height: -webkit-fill-available;
+}
+body {
+  width: 100%;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  min-height: 100dvh;
   background: var(--space-black);
   color: var(--text-primary);
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+}
+#root {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -98,12 +111,15 @@ html, body, #root {
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 12px 28px;
+  min-height: 44px; /* iOS tap target minimum */
   border: 2px solid transparent;
   border-radius: var(--radius-xl);
   font-size: 1rem; font-weight: 700; letter-spacing: 0.05em;
   cursor: pointer; transition: var(--transition);
   text-transform: uppercase;
+  touch-action: manipulation; /* remove 300ms tap delay */
   position: relative; overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 .btn::before {
   content: '';
@@ -259,4 +275,19 @@ html, body, #root {
 .tooltip-container:hover .tooltip-text {
   visibility: visible;
   opacity: 1;
+}
+
+/* ── Mobile Responsive ───────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .mobile-pad { padding: 16px !important; }
+  .mobile-hide { display: none !important; }
+  .mobile-stack { flex-direction: column !important; }
+  .mobile-full { width: 100% !important; max-width: 100% !important; }
+  .mobile-sm-text { font-size: 0.85rem !important; }
+}
+
+/* Prevent double-tap zoom on interactive elements */
+button, input, select, a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }

@@ -22,6 +22,12 @@
  *       [wrongAnswer]: string    — specific hint for a known wrong answer
  *     }
  *   }
+ *   visual_type:    string?      — "fraction-pie"|"fraction-compare"|"array-dots"|"pattern"
+ *                               | "number-bonds"|"clock-face"|"coins"|"coordinate-plane"|"bar-model"
+ *                               | "pattern-matrix"|"rotation"|"reflection"|"odd-one-out"
+ *                               | "shape-net"|"visual-analogy"|"symmetry-complete"
+ *   type:           "mc"|"numeric"|"visual-reasoning"
+ *                               — visual-reasoning: options are SVG thumbnails, not text
  *   manipulative:   string?      — "star-cubes"|"gravity-scale"|"coordinate-plane"|null
  *   template?: {                 — Phase 2: procedural generation
  *     type:         "arithmetic"|"equation"|"word-problem"
@@ -33,16 +39,16 @@
  */
 
 export const TOPICS = {
-  1:  ['counting', 'addition', 'subtraction', 'shapes'],
-  2:  ['addition', 'subtraction', 'place-value', 'measurement'],
-  3:  ['multiplication', 'division', 'fractions', 'time'],
-  4:  ['multiplication', 'division', 'fractions', 'decimals'],
-  5:  ['fractions', 'decimals', 'geometry', 'data'],
-  6:  ['ratios', 'percentages', 'integers', 'expressions'],
-  7:  ['algebra', 'geometry', 'statistics', 'proportions'],
-  8:  ['linear-equations', 'functions', 'geometry', 'statistics'],
-  9:  ['quadratics', 'polynomials', 'trigonometry', 'statistics'],
-  10: ['calculus-intro', 'logarithms', 'advanced-geometry', 'probability'],
+  1:  ['counting', 'addition', 'subtraction', 'shapes', 'reasoning'],
+  2:  ['addition', 'subtraction', 'place-value', 'measurement', 'reasoning'],
+  3:  ['multiplication', 'division', 'fractions', 'time', 'reasoning'],
+  4:  ['multiplication', 'division', 'fractions', 'decimals', 'reasoning'],
+  5:  ['fractions', 'decimals', 'geometry', 'data', 'reasoning'],
+  6:  ['ratios', 'percentages', 'integers', 'expressions', 'reasoning'],
+  7:  ['algebra', 'geometry', 'statistics', 'proportions', 'reasoning'],
+  8:  ['linear-equations', 'functions', 'geometry', 'statistics', 'reasoning'],
+  9:  ['quadratics', 'polynomials', 'trigonometry', 'statistics', 'reasoning'],
+  10: ['calculus-intro', 'logarithms', 'advanced-geometry', 'probability', 'reasoning'],
 }
 
 export const TOPIC_DISPLAY = {
@@ -63,6 +69,7 @@ export const TOPIC_DISPLAY = {
   'quadratics':        { name: 'Quadratic Quasar',     color: '#ff5722', planet: 'Proxima' },
   'shapes':            { name: 'Geometry Gems',        color: '#ff4081', planet: 'Venus-Moon' },
   'ratios':            { name: 'Ratio Ring',           color: '#cddc39', planet: 'Saturn-Ring' },
+  'reasoning':         { name: 'Mind Maze',            color: '#26c6da', planet: 'Enigma' },
   'nebula':            { name: 'Cosmic Nebula',        color: '#ce93d8', planet: 'Nebula' },
 }
 

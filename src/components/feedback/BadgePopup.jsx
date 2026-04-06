@@ -48,10 +48,6 @@ export default function BadgePopup() {
         <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'white', marginBottom: 6 }}>
           {newBadge.name}
         </div>
-        <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-          {newBadge.desc}
-        </div>
-
         {/* Stars decoration */}
         {[...Array(6)].map((_, i) => (
           <div key={i} style={{
