@@ -36,7 +36,11 @@ export default function PinInput({ onComplete, error = false }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-      <div style={{ display: 'flex', gap: 12 }}>
+      <div
+        role="group"
+        aria-label="PIN entry"
+        autoComplete="off"
+        style={{ display: 'flex', gap: 12 }}>
         {digits.map((d, i) => (
           <input
             key={i}
@@ -44,6 +48,11 @@ export default function PinInput({ onComplete, error = false }) {
             type="password"
             inputMode="numeric"
             maxLength={1}
+            autoComplete="off"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            data-bwignore="true"
+            aria-label={`PIN digit ${i + 1}`}
             value={d}
             onChange={e => handleChange(i, e.target.value)}
             onKeyDown={e => handleKeyDown(i, e)}

@@ -9,6 +9,8 @@ Add a new topic (planet) to an existing grade in Stellar Math — updates the sc
 
 Parse `$ARGUMENTS` to extract `grade` (number 1–10) and `topic` (string, lowercase-hyphenated). If either is missing, ask the user before proceeding.
 
+**Special case:** `reasoning` is a reserved topic that already exists in every grade and is powered by shared bank files (`reasoning-k2.js`, `reasoning-35.js`, `reasoning-68.js`, `reasoning-910.js`). If the user tries to add `reasoning` with this command, stop and direct them to `/add-questions ${grade} reasoning` instead.
+
 ---
 
 ### Step 1 — Read current state
@@ -59,6 +61,8 @@ All placeholder questions must pass the same validation as `/add-questions`:
 - Numeric: options null
 - `hint_logic.default` required
 - Space-themed text
+
+**Note:** Do NOT create stubs for `visual-reasoning` type questions here. Visual-reasoning questions belong in the reasoning bank files and are always added via `/add-questions ${grade} reasoning`.
 
 ---
 

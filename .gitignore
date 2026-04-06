@@ -13,3 +13,6 @@ dist/
 .DS_Store
 .aider*
 *.log
+
+# Local Netlify folder
+.netlify

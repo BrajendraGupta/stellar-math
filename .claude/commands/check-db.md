@@ -16,6 +16,21 @@ Read both files completely:
 
 Also read `src/data/schema.js` for the DB table definitions (to cross-check index names).
 
+#### Expected tables in the current schema (version 3)
+
+The Dexie database is at version 3. All of these tables must be declared:
+- `profiles` — `++id, name`
+- `sessions` — `++id, studentId, date`
+- `answers` — `++id, sessionId, studentId, topic, grade, isCorrect, timestamp`
+- `masteryScores` — `[studentId+grade+topic], studentId, grade`
+- `earnedBadges` — `[studentId+badgeId], studentId`
+- `dailyActivity` — `[studentId+date], studentId, date`
+- `streakState` — `studentId`
+- `masteryHistory` — `++id, [studentId+grade+topic], studentId, timestamp`
+- `portalPins` — `studentId`
+
+If a version upgrade is needed (new tables added), check that ALL prior tables are re-listed in the newer version call — missing a table in a new version causes Dexie to silently drop it.
+
 ---
 
 ### Step 2 — Run all checks
@@ -46,7 +61,17 @@ Check for every pattern below and report each finding as ✅ PASS or ❌ FAIL wi
 - **FAIL** if querying a field that is not indexed (causes a full table scan or Dexie error).
 
 #### G. Version consistency
-- Verify `db.version(N).stores({...})` — if there are multiple version calls, check that older versions are kept for migration and that the latest version includes all tables.
+- Verify `db.version(N).stores({...})` — if there are multiple version calls, check that the latest version includes **all** tables from the Expected Tables list above.
+- **FAIL** if any expected table is missing from the latest version's stores declaration.
+- **WARN** if older version calls are absent (needed for users upgrading from old versions).
+
+#### H. PIN security (portalPins table)
+- The `setPortalPin` function should hash with `crypto.subtle.digest('SHA-256', ...)` before storing. **WARN** if a PIN is stored as plain text.
+- `verifyPortalPin` should compare hashes, not raw values.
+
+#### I. Streak / daily activity consistency
+- `upsertDailyActivity` should use `.put()` or a transaction to avoid lost updates if called concurrently.
+- **WARN** if `checkAndUpdateStreak` reads `streakState` and writes it back without a transaction.
 
 ---
 
