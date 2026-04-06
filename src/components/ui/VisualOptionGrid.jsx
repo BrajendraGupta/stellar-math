@@ -1,5 +1,5 @@
 import React from 'react'
-import { renderShape } from '../visuals/reasoningShapes.js'
+import { renderShape } from '../visuals/reasoningShapes.jsx'
 import PatternMatrix from '../visuals/PatternMatrix.jsx'
 
 /**

@@ -1,5 +1,5 @@
 import React from 'react'
-import { renderShape } from './reasoningShapes.js'
+import { renderShape } from './reasoningShapes.jsx'
 
 /**
  * OddOneOut — 5 items in a row; student taps the odd one.

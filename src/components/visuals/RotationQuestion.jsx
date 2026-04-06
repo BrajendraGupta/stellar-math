@@ -1,5 +1,5 @@
 import React from 'react'
-import { renderShape } from './reasoningShapes.js'
+import { renderShape } from './reasoningShapes.jsx'
 
 /**
  * RotationQuestion — shows a reference shape and asks which option is it rotated by N degrees.

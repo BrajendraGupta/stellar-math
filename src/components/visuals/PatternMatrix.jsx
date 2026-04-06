@@ -1,5 +1,5 @@
 import React from 'react'
-import { renderShape } from './reasoningShapes.js'
+import { renderShape } from './reasoningShapes.jsx'
 
 /**
  * PatternMatrix — 2×2 or 3×3 grid with one cell replaced by "?"

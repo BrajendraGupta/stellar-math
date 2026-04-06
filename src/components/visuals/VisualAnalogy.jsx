@@ -1,5 +1,5 @@
 import React from 'react'
-import { renderShape } from './reasoningShapes.js'
+import { renderShape } from './reasoningShapes.jsx'
 
 /**
  * VisualAnalogy — "A is to B as C is to ?"
