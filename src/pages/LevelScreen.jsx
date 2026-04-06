@@ -171,7 +171,7 @@ export default function LevelScreen() {
       {/* Top bar */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: isMobile ? '10px 14px' : '16px 24px',
+        padding: isMobile ? '8px 12px' : '12px 20px',
         background: 'rgba(0,0,0,0.2)',
         borderBottom: '1px solid var(--glass-border)',
         gap: isMobile ? 8 : 16,
@@ -205,8 +205,8 @@ export default function LevelScreen() {
 
       {/* Rocket progress track */}
       <div style={{
-        margin: isMobile ? '8px 14px 0' : '12px 24px 0',
-        height: isMobile ? 48 : 64,
+        margin: isMobile ? '4px 12px 0' : '8px 20px 0',
+        height: isMobile ? 36 : 48,
         background: 'rgba(0,0,0,0.2)',
         borderRadius: 16,
         position: 'relative',
@@ -251,14 +251,14 @@ export default function LevelScreen() {
       <div style={{
         flex: 1,
         display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        gap: isMobile ? 12 : 24,
-        padding: isMobile ? '12px 14px' : '20px 24px',
-        alignItems: 'flex-start',
+        flexDirection: 'column',
+        gap: isMobile ? 8 : 12,
+        padding: isMobile ? '8px 12px' : '14px 20px',
         overflow: 'auto',
+        minHeight: 0,
       }}>
         {/* Question panel */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 16, minWidth: 0, width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 6 : 10, minWidth: 0, width: '100%' }}>
           {/* Difficulty badge */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)',
@@ -308,183 +308,241 @@ export default function LevelScreen() {
             </button>
           </div>
 
-          {/* Visual question display */}
+          {/* Visual + Answer: side-by-side on desktop, stacked compact on mobile */}
           {question.visual_type && (
-            <div className="glass-card" style={{
-              padding: '20px 24px', display: 'flex', justifyContent: 'center',
-              background: 'rgba(0,0,0,0.3)', borderColor: 'rgba(0,229,255,0.2)',
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? 8 : 16,
+              alignItems: isMobile ? 'stretch' : 'flex-start',
             }}>
-              {question.visual_type === 'fraction-pie' && question.visual_config && (
-                <FractionPie {...question.visual_config} hideLabel />
-              )}
-              {question.visual_type === 'fraction-compare' && question.visual_config && (
-                <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <FractionPie {...question.visual_config.left} size={140} hideLabel />
-                    <div style={{ marginTop: 4, fontWeight: 700, color: question.visual_config.left.color }}>
-                      {question.visual_config.left.label}
+              {/* Visual panel — 50% */}
+              <div className="glass-card" style={{
+                padding: '10px 12px',
+                display: 'flex', justifyContent: 'center', alignItems: 'center',
+                background: 'rgba(0,0,0,0.3)', borderColor: 'rgba(0,229,255,0.2)',
+                flex: '1 1 50%',
+                minWidth: 0,
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  transform: isMobile ? 'scale(0.78)' : 'scale(0.9)',
+                  transformOrigin: 'top center',
+                  // Reserve space so the container doesn't collapse
+                  display: 'flex', justifyContent: 'center',
+                }}>
+                  {question.visual_type === 'fraction-pie' && question.visual_config && (
+                    <FractionPie {...question.visual_config} hideLabel />
+                  )}
+                  {question.visual_type === 'fraction-compare' && question.visual_config && (
+                    <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <FractionPie {...question.visual_config.left} size={110} hideLabel />
+                        <div style={{ marginTop: 4, fontWeight: 700, fontSize: '0.8rem', color: question.visual_config.left.color }}>
+                          {question.visual_config.left.label}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '1.4rem', color: 'var(--text-muted)', fontWeight: 800 }}>vs</div>
+                      <div style={{ textAlign: 'center' }}>
+                        <FractionPie {...question.visual_config.right} size={110} hideLabel />
+                        <div style={{ marginTop: 4, fontWeight: 700, fontSize: '0.8rem', color: question.visual_config.right.color }}>
+                          {question.visual_config.right.label}
+                        </div>
+                      </div>
                     </div>
+                  )}
+                  {question.visual_type === 'array-dots' && question.visual_config && (
+                    <ArrayDots {...question.visual_config} size={180} hideAnswer />
+                  )}
+                  {question.visual_type === 'pattern' && question.visual_config && (
+                    <PatternSequence {...question.visual_config} />
+                  )}
+                  {question.visual_type === 'number-bonds' && question.visual_config && (
+                    <NumberBonds {...question.visual_config} size={160} />
+                  )}
+                  {question.visual_type === 'clock-face' && question.visual_config && (
+                    <ClockFace {...question.visual_config} size={140} />
+                  )}
+                  {question.visual_type === 'coins' && question.visual_config && (
+                    <CoinsDisplay {...question.visual_config} />
+                  )}
+                  {question.visual_type === 'coordinate-plane' && question.visual_config && (
+                    <CoordinatePlane {...question.visual_config} size={180} />
+                  )}
+                  {question.visual_type === 'bar-model' && question.visual_config && (
+                    <BarModel {...question.visual_config} width={240} />
+                  )}
+                  {question.visual_type === 'pattern-matrix' && question.visual_config && (
+                    <PatternMatrix {...question.visual_config} cellSize={60} />
+                  )}
+                  {question.visual_type === 'rotation' && question.visual_config && (
+                    <RotationQuestion {...question.visual_config} size={160} />
+                  )}
+                  {question.visual_type === 'reflection' && question.visual_config && (
+                    <ReflectionQuestion {...question.visual_config} size={160} />
+                  )}
+                  {question.visual_type === 'odd-one-out' && question.visual_config && (
+                    <OddOneOut
+                      items={question.visual_config.items}
+                      selected={selectedOption}
+                      correct={feedbackState ? question.visual_config.oddIndex : null}
+                      feedbackState={feedbackState}
+                      onSelect={idx => {
+                        if (feedbackState) return
+                        setSelectedOption(idx)
+                        submitAnswer(String(idx))
+                      }}
+                    />
+                  )}
+                  {question.visual_type === 'shape-net' && question.visual_config && (
+                    <ShapeNet {...question.visual_config} size={160} />
+                  )}
+                  {question.visual_type === 'visual-analogy' && question.visual_config && (
+                    <VisualAnalogy {...question.visual_config} size={56} />
+                  )}
+                  {question.visual_type === 'symmetry-complete' && question.visual_config && (
+                    <SymmetryComplete {...question.visual_config} size={160} />
+                  )}
+                </div>
+              </div>
+
+              {/* Answers column — 50% */}
+              <div style={{ flex: '1 1 50%', display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+                {/* Feedback */}
+                {feedbackState && (
+                  <div style={{
+                    padding: '8px 14px', borderRadius: 10,
+                    background: feedbackState === 'correct' ? 'rgba(0,230,118,0.12)' : 'rgba(255,71,87,0.1)',
+                    border: `2px solid ${feedbackState === 'correct' ? 'var(--planet-green)' : 'var(--danger-red)'}`,
+                    fontSize: '0.9rem', fontWeight: 700,
+                    color: feedbackState === 'correct' ? 'var(--planet-green)' : 'var(--danger-red)',
+                    animation: feedbackState === 'wrong' ? 'wrong-shake 0.4s ease' : 'slide-up 0.3s ease',
+                  }}>
+                    {feedbackState === 'correct' ? '✓ Correct! 🚀' : '✕ Check Co-Pilot\'s hint!'}
                   </div>
-                  <div style={{ fontSize: '2rem', color: 'var(--text-muted)', fontWeight: 800 }}>vs</div>
-                  <div style={{ textAlign: 'center' }}>
-                    <FractionPie {...question.visual_config.right} size={140} hideLabel />
-                    <div style={{ marginTop: 4, fontWeight: 700, color: question.visual_config.right.color }}>
-                      {question.visual_config.right.label}
-                    </div>
+                )}
+
+                {isVisualReasoning && question.visual_options ? (
+                  <VisualOptionGrid
+                    options={question.visual_options}
+                    selected={selectedOption !== null ? optionLabels[selectedOption] : null}
+                    feedbackState={feedbackState}
+                    correctKey={String(question.correct_answer).toUpperCase()}
+                    onSelect={key => {
+                      if (feedbackState) return
+                      const idx = optionLabels.indexOf(key)
+                      setSelectedOption(idx)
+                      submitAnswer(key)
+                    }}
+                  />
+                ) : isMultipleChoice ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    {question.options.map((opt, i) => {
+                      const isSelected = selectedOption === i
+                      const isCorrectOption = i === correctOptionIdx
+                      let btnState = null
+                      if (isSelected && !feedbackState) btnState = 'selected'
+                      else if (feedbackState === 'correct' && isSelected) btnState = 'correct'
+                      else if (feedbackState === 'wrong' && isSelected) btnState = 'wrong'
+                      else if (feedbackState === 'wrong' && isCorrectOption) btnState = 'correct'
+                      return (
+                        <ChoiceButton key={i} label={`${optionLabels[i]}. ${opt}`}
+                          disabled={!!feedbackState} state={btnState}
+                          onClick={() => handleMCSelect(opt, i)} />
+                      )
+                    })}
                   </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <input type="text" inputMode="decimal" autoComplete="off"
+                      autoCorrect="off" autoCapitalize="off" spellCheck="false"
+                      value={numericInput} onChange={e => setNumericInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleNumericSubmit()}
+                      placeholder="Your answer..." disabled={!!feedbackState}
+                      style={{
+                        flex: 1, padding: '12px 14px', background: 'var(--glass-bg)',
+                        border: `2px solid ${feedbackState === 'correct' ? 'var(--planet-green)' : feedbackState === 'wrong' ? 'var(--danger-red)' : 'var(--glass-border)'}`,
+                        borderRadius: 12, color: 'white',
+                        fontSize: '1.1rem', textAlign: 'center', outline: 'none', minHeight: 48,
+                      }} />
+                    <button className="btn btn-primary" onClick={handleNumericSubmit}
+                      disabled={!!feedbackState || !numericInput.trim()}
+                      style={{ opacity: (feedbackState || !numericInput.trim()) ? 0.5 : 1, flexShrink: 0 }}>
+                      Check 🚀
+                    </button>
+                  </div>
+                )}
+
+                {feedbackState && (
+                  <button className="btn btn-success" onClick={handleNext} style={{ animation: 'slide-up 0.3s ease' }}>
+                    {currentQuestionIndex + 1 < currentQuestions.length ? 'Next →' : '🏁 Finish'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Non-visual questions: feedback + answers stacked */}
+          {!question.visual_type && (
+            <>
+              {feedbackState && (
+                <div style={{
+                  padding: '10px 16px', borderRadius: 10,
+                  background: feedbackState === 'correct' ? 'rgba(0,230,118,0.12)' : 'rgba(255,71,87,0.1)',
+                  border: `2px solid ${feedbackState === 'correct' ? 'var(--planet-green)' : 'var(--danger-red)'}`,
+                  fontSize: '0.95rem', fontWeight: 700,
+                  color: feedbackState === 'correct' ? 'var(--planet-green)' : 'var(--danger-red)',
+                  animation: feedbackState === 'wrong' ? 'wrong-shake 0.4s ease' : 'slide-up 0.3s ease',
+                }}>
+                  {feedbackState === 'correct' ? '✓ Correct! Great work, Captain! 🚀' : '✕ Not quite — check Co-Pilot ARIA\'s hint!'}
                 </div>
               )}
-              {question.visual_type === 'array-dots' && question.visual_config && (
-                <ArrayDots {...question.visual_config} size={260} hideAnswer />
-              )}
-              {question.visual_type === 'pattern' && question.visual_config && (
-                <PatternSequence {...question.visual_config} />
-              )}
-              {question.visual_type === 'number-bonds' && question.visual_config && (
-                <NumberBonds {...question.visual_config} />
-              )}
-              {question.visual_type === 'clock-face' && question.visual_config && (
-                <ClockFace {...question.visual_config} />
-              )}
-              {question.visual_type === 'coins' && question.visual_config && (
-                <CoinsDisplay {...question.visual_config} />
-              )}
-              {question.visual_type === 'coordinate-plane' && question.visual_config && (
-                <CoordinatePlane {...question.visual_config} />
-              )}
-              {question.visual_type === 'bar-model' && question.visual_config && (
-                <BarModel {...question.visual_config} />
-              )}
-              {question.visual_type === 'pattern-matrix' && question.visual_config && (
-                <PatternMatrix {...question.visual_config} />
-              )}
-              {question.visual_type === 'rotation' && question.visual_config && (
-                <RotationQuestion {...question.visual_config} />
-              )}
-              {question.visual_type === 'reflection' && question.visual_config && (
-                <ReflectionQuestion {...question.visual_config} />
-              )}
-              {question.visual_type === 'odd-one-out' && question.visual_config && (
-                <OddOneOut
-                  items={question.visual_config.items}
-                  selected={selectedOption}
-                  correct={feedbackState ? question.visual_config.oddIndex : null}
-                  feedbackState={feedbackState}
-                  onSelect={idx => {
-                    if (feedbackState) return
-                    setSelectedOption(idx)
-                    submitAnswer(String(idx))
-                  }}
-                />
-              )}
-              {question.visual_type === 'shape-net' && question.visual_config && (
-                <ShapeNet {...question.visual_config} />
-              )}
-              {question.visual_type === 'visual-analogy' && question.visual_config && (
-                <VisualAnalogy {...question.visual_config} />
-              )}
-              {question.visual_type === 'symmetry-complete' && question.visual_config && (
-                <SymmetryComplete {...question.visual_config} />
-              )}
-            </div>
-          )}
 
-          {/* Feedback overlay */}
-          {feedbackState && (
-            <div style={{
-              padding: '12px 20px',
-              borderRadius: 12,
-              background: feedbackState === 'correct'
-                ? 'rgba(0,230,118,0.12)' : 'rgba(255,71,87,0.1)',
-              border: `2px solid ${feedbackState === 'correct' ? 'var(--planet-green)' : 'var(--danger-red)'}`,
-              fontSize: '1rem', fontWeight: 700,
-              color: feedbackState === 'correct' ? 'var(--planet-green)' : 'var(--danger-red)',
-              animation: feedbackState === 'wrong' ? 'wrong-shake 0.4s ease' : 'slide-up 0.3s ease',
-            }}>
-              {feedbackState === 'correct' ? '✓ Correct! Great work, Captain! 🚀' : '✕ Not quite — check Co-Pilot ARIA\'s hint!'}
-            </div>
-          )}
+              {isMultipleChoice ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {question.options.map((opt, i) => {
+                    const isSelected = selectedOption === i
+                    const isCorrectOption = i === correctOptionIdx
+                    let btnState = null
+                    if (isSelected && !feedbackState) btnState = 'selected'
+                    else if (feedbackState === 'correct' && isSelected) btnState = 'correct'
+                    else if (feedbackState === 'wrong' && isSelected) btnState = 'wrong'
+                    else if (feedbackState === 'wrong' && isCorrectOption) btnState = 'correct'
+                    return (
+                      <ChoiceButton key={i} label={`${optionLabels[i]}. ${opt}`}
+                        disabled={!!feedbackState} state={btnState}
+                        onClick={() => handleMCSelect(opt, i)} />
+                    )
+                  })}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <input type="text" inputMode="decimal" autoComplete="off"
+                    autoCorrect="off" autoCapitalize="off" spellCheck="false"
+                    value={numericInput} onChange={e => setNumericInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleNumericSubmit()}
+                    placeholder="Your answer..." disabled={!!feedbackState}
+                    style={{
+                      flex: 1, padding: '14px 18px', background: 'var(--glass-bg)',
+                      border: `2px solid ${feedbackState === 'correct' ? 'var(--planet-green)' : feedbackState === 'wrong' ? 'var(--danger-red)' : 'var(--glass-border)'}`,
+                      borderRadius: 12, color: 'white',
+                      fontSize: isMobile ? '1.1rem' : '1.3rem', textAlign: 'center',
+                      outline: 'none', minHeight: 52,
+                    }} />
+                  <button className="btn btn-primary" onClick={handleNumericSubmit}
+                    disabled={!!feedbackState || !numericInput.trim()}
+                    style={{ opacity: (feedbackState || !numericInput.trim()) ? 0.5 : 1, flexShrink: 0 }}>
+                    Check 🚀
+                  </button>
+                </div>
+              )}
 
-          {/* Answer input */}
-          {isVisualReasoning && question.visual_options ? (
-            <VisualOptionGrid
-              options={question.visual_options}
-              selected={selectedOption !== null ? optionLabels[selectedOption] : null}
-              feedbackState={feedbackState}
-              correctKey={String(question.correct_answer).toUpperCase()}
-              onSelect={key => {
-                if (feedbackState) return
-                const idx = optionLabels.indexOf(key)
-                setSelectedOption(idx)
-                submitAnswer(key)
-              }}
-            />
-          ) : isMultipleChoice ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {question.options.map((opt, i) => {
-                const isSelected = selectedOption === i
-                const isCorrectOption = i === correctOptionIdx
-                let btnState = null
-                if (isSelected && !feedbackState) btnState = 'selected'
-                else if (feedbackState === 'correct' && isSelected) btnState = 'correct'
-                else if (feedbackState === 'wrong' && isSelected) btnState = 'wrong'
-                else if (feedbackState === 'wrong' && isCorrectOption) btnState = 'correct'
-
-                return (
-                  <ChoiceButton
-                    key={i}
-                    label={`${optionLabels[i]}. ${opt}`}
-                    disabled={!!feedbackState}
-                    state={btnState}
-                    onClick={() => handleMCSelect(opt, i)}
-                  />
-                )
-              })}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <input
-                type="text"
-                inputMode="decimal"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-                value={numericInput}
-                onChange={e => setNumericInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleNumericSubmit()}
-                placeholder="Your answer..."
-                disabled={!!feedbackState}
-                style={{
-                  flex: 1, padding: '14px 18px',
-                  background: 'var(--glass-bg)',
-                  border: feedbackState === 'correct'
-                    ? '2px solid var(--planet-green)'
-                    : feedbackState === 'wrong'
-                    ? '2px solid var(--danger-red)'
-                    : '2px solid var(--glass-border)',
-                  borderRadius: 12, color: 'white',
-                  fontSize: isMobile ? '1.1rem' : '1.3rem', textAlign: 'center',
-                  outline: 'none',
-                  minHeight: 52,
-                }}
-              />
-              <button
-                className="btn btn-primary"
-                onClick={handleNumericSubmit}
-                disabled={!!feedbackState || !numericInput.trim()}
-                style={{ opacity: (feedbackState || !numericInput.trim()) ? 0.5 : 1, flexShrink: 0 }}
-              >
-                Check 🚀
-              </button>
-            </div>
-          )}
-
-          {/* Next button */}
-          {feedbackState && (
-            <button className="btn btn-success" onClick={handleNext} style={{ animation: 'slide-up 0.3s ease' }}>
-              {currentQuestionIndex + 1 < currentQuestions.length ? 'Next Question →' : '🏁 Finish Mission'}
-            </button>
+              {feedbackState && (
+                <button className="btn btn-success" onClick={handleNext} style={{ animation: 'slide-up 0.3s ease' }}>
+                  {currentQuestionIndex + 1 < currentQuestions.length ? 'Next Question →' : '🏁 Finish Mission'}
+                </button>
+              )}
+            </>
           )}
         </div>
 
